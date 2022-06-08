@@ -1,0 +1,35 @@
+
+  /**
+  * {{httpMethod}}{{#subresourceOperation}}
+  * Path("{{{path}}}"){{/subresourceOperation}}{{#lambda.escapeAsterisk}}{{#hasConsumes}}
+  * Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
+  * Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}{{/lambda.escapeAsterisk}}
+  */
+  public {{>returnTypeInterface}} {{nickname}}({{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{^-last}}, {{/-last}}{{/allParams}}) {
+    RequestInit init = RequestInit.create();
+    init.setMethod("{{httpMethod}}");
+    init.setCredentials("same-origin");
+    {{#headerParams}}
+    // Add headerParam
+    init.getHeaders().asJsPropertyMap().set("{{baseName}}", {{paramName}});
+    {{/headerParams}}
+    {{#bodyParams}}
+    // Set bodyParam
+    init.setBody(client.stringify({{paramName}}));
+    {{/bodyParams}}
+    {{#formParams}}
+    // TODO: add formParam @FormParam(value = "{{baseName}}") {{{dataType}}} {{paramName}}
+    {{/formParams}}
+
+    String url = "{{#subresourceOperation}}{{{path}}}{{/subresourceOperation}}";
+    {{#pathParams}}
+    // Replace pathParam
+    url = url.replace("{{openbrace}}{{baseName}}{{closebrace}}", client.encodeURIComponent({{paramName}}));
+    {{/pathParams}}
+    {{#queryParams}}
+    // Append queryParam
+    url = url + "{{#-first}}?{{/-first}}{{^-first}}&{{/-first}}{{baseName}}=" + client.encodeURIComponent({{paramName}});
+    {{/queryParams}}
+
+    return client.fetch(url, init).then(this::{{^vendorExtensions.x-java-is-response-void}}handleJsonResponse{{/vendorExtensions.x-java-is-response-void}}{{#vendorExtensions.x-java-is-response-void}}handleEmptyResponse{{/vendorExtensions.x-java-is-response-void}});
+  }

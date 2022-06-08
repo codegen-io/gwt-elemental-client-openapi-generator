@@ -1,0 +1,8 @@
+
+  /**
+  * {{httpMethod}}{{#subresourceOperation}}
+  * Path("{{{path}}}"){{/subresourceOperation}}{{#lambda.escapeAsterisk}}{{#hasConsumes}}
+  * Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
+  * Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}{{/lambda.escapeAsterisk}}
+  */
+  {{>returnTypeInterface}} {{nickname}}({{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{^-last}}, {{/-last}}{{/allParams}});

@@ -1,0 +1,52 @@
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+import java.util.function.Consumer;
+
+import elemental2.core.JsArray;
+import elemental2.core.JsError;
+import elemental2.core.JsMap;
+import elemental2.core.JsSet;
+import elemental2.dom.RequestInit;
+import elemental2.dom.Response;
+import elemental2.promise.IThenable;
+import elemental2.promise.Promise;
+import jsinterop.base.Js;
+
+/**
+ * Path("{{commonPath}}"){{#lambda.escapeAsterisk}}{{#hasConsumes}}
+ * Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
+ * Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}{{/lambda.escapeAsterisk}}
+ */
+{{>generatedAnnotation}}
+public class {{classname}}Client implements {{classname}} {
+
+  private final ElementalClient client;
+
+  public {{classname}}Client(ElementalClient client) {
+    this.client = client;
+  }
+{{#operations}}
+{{#operation}}
+{{>apiMethod}}
+{{/operation}}
+{{/operations}}
+
+  private final <T> Promise<T> handleJsonResponse(Response response) {
+    if (!response.ok) {
+      return Promise.reject(new JsError(response.statusText));
+    }
+
+    return response.json().then(json -> Promise.resolve(Js.<T>cast(json)));
+  }
+
+  private final Promise<Void> handleEmptyResponse(Response response) {
+    if (!response.ok) {
+      return Promise.reject(new JsError(response.statusText));
+    }
+
+    return Promise.resolve(Js.<Void>cast(null));
+  }
+}

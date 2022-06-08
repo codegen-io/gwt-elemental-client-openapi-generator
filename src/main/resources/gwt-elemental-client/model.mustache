@@ -1,1 +1,13 @@
-# This is a sample model mustache template.
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+{{#models}}
+{{#model}}
+{{#isEnum}}
+{{>enumOuterClass}}
+{{/isEnum}}
+{{^isEnum}}{{>pojo}}{{/isEnum}}
+{{/model}}
+{{/models}}

@@ -1,0 +1,73 @@
+package {{apiPackage}};
+
+import elemental2.core.Global;
+import elemental2.dom.DomGlobal;
+import elemental2.dom.RequestInit;
+import elemental2.dom.Response;
+import elemental2.promise.Promise;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+public class FetchClient implements ElementalClient {
+
+  private final String baseUrl;
+
+  private final List<BiConsumer<String, RequestInit>> requestFilters;
+
+  private final List<Function<Response, Promise<Response>>> responseFilters;
+
+  public FetchClient(
+      String baseUrl,
+      List<BiConsumer<String, RequestInit>> requestFilters,
+      List<Function<Response, Promise<Response>>> responseFilters) {
+    this.baseUrl = baseUrl;
+    this.requestFilters = requestFilters;
+    this.responseFilters = responseFilters;
+  }
+
+  public static FetchClient forBaseUrl(String baseUrl) {
+    return new FetchClient(baseUrl, Collections.emptyList(), Collections.emptyList());
+  }
+
+  public FetchClient withRequestFilter(BiConsumer<String, RequestInit> requestFilter) {
+    List<BiConsumer<String, RequestInit>> filters = new ArrayList<>(this.requestFilters);
+    filters.add(requestFilter);
+
+    return new FetchClient(baseUrl, filters, responseFilters);
+  }
+
+  public FetchClient withResponseFilter(Function<Response, Promise<Response>> responseFilter) {
+    List<Function<Response, Promise<Response>>> filters = new ArrayList<>(this.responseFilters);
+    filters.add(responseFilter);
+
+    return new FetchClient(baseUrl, requestFilters, filters);
+  }
+
+  @Override
+  public String encodeURIComponent(String uri) {
+    return Global.encodeURIComponent(uri);
+  }
+
+  @Override
+  public String stringify(Object object) {
+    return Global.JSON.stringify(object);
+  }
+
+  @Override
+  public Promise<Response> fetch(String path, RequestInit init) {
+    String url = baseUrl + path;
+    requestFilters.forEach(filter -> filter.accept(url, init));
+
+    Promise<Response> promise = DomGlobal.fetch(url, init);
+
+    for (Function<Response, Promise<Response>> filter : responseFilters) {
+        promise = promise.then(filter::apply);
+    }
+
+    return promise;
+  }
+}

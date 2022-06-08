@@ -1,0 +1,168 @@
+import java.util.Objects;
+
+import jsinterop.annotations.JsOverlay;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsProperty;
+import jsinterop.annotations.JsType;
+{{#description}}
+/**
+ * {{.}}
+ **/{{/description}}
+@JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "Object")
+{{>generatedAnnotation}}{{>additionalModelTypeAnnotations}}
+{{#vendorExtensions.x-class-extra-annotation}}
+{{{vendorExtensions.x-class-extra-annotation}}}
+{{/vendorExtensions.x-class-extra-annotation}}
+public class {{classname}} {{#parent}}extends {{{.}}} {{/parent}}{{#vendorExtensions.x-implements}}{{#-first}}implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}} {
+  {{#vars}}{{#isEnum}}{{^isContainer}}
+
+{{>enumClass}}{{/isContainer}}{{#isContainer}}{{#mostInnerItems}}
+
+{{>enumClass}}{{/mostInnerItems}}{{/isContainer}}{{/isEnum}}
+  {{#vendorExtensions.x-field-extra-annotation}}
+  {{{vendorExtensions.x-field-extra-annotation}}}
+  {{/vendorExtensions.x-field-extra-annotation}}
+  @JsProperty(name = "{{baseName}}")
+  private {{{datatypeWithEnum}}} {{name}}; {{#defaultValue}}// {{{.}}};{{/defaultValue}}{{/vars}}{{#generateBuilders}}{{^additionalProperties}}
+
+  protected {{classname}}({{classname}}Builder<?, ?> b) {
+  {{#parent}}super(b);
+  {{/parent}}{{#vars}}this.{{name}} = b.{{name}};{{/vars}}
+  }
+
+  public {{classname}}() { }{{/additionalProperties}}{{/generateBuilders}}
+
+  {{#vars}}/**
+   {{#description}}
+   * {{.}}
+   {{/description}}
+   {{#minimum}}
+   * minimum: {{.}}
+   {{/minimum}}
+   {{#maximum}}
+   * maximum: {{.}}
+   {{/maximum}}
+   **/
+  @JsOverlay
+  public final {{classname}} {{name}}({{{datatypeWithEnum}}} {{name}}) {
+    this.{{name}} = {{name}};
+    return this;
+  }
+
+  {{#vendorExtensions.x-extra-annotation}}{{{vendorExtensions.x-extra-annotation}}}{{/vendorExtensions.x-extra-annotation}}
+  @JsOverlay
+{{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  public final {{>beanValidatedType}} {{getter}}() {
+    {{#isContainer}}
+    if (this.{{name}} == null) {
+      this.{{name}} = {{{defaultValue}}};
+    }
+    {{/isContainer}}
+    return {{name}};
+  }
+
+  @JsOverlay
+  {{#vendorExtensions.x-setter-extra-annotation}}{{{vendorExtensions.x-setter-extra-annotation}}}
+  {{/vendorExtensions.x-setter-extra-annotation}}public final void {{setter}}({{{datatypeWithEnum}}} {{name}}) {
+    this.{{name}} = {{name}};
+  }
+
+  {{#isArray}}
+  @JsOverlay
+  public final {{classname}} add{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
+    if (this.{{name}} == null) {
+      this.{{name}} = {{{defaultValue}}};
+    }
+
+    this.{{name}}.{{#uniqueItems}}add{{/uniqueItems}}{{^uniqueItems}}push{{/uniqueItems}}({{name}}Item);
+    return this;
+  }
+
+  @JsOverlay
+  public final {{classname}} remove{{nameInCamelCase}}Item({{#uniqueItems}}{{{items.datatypeWithEnum}}} {{name}}Item{{/uniqueItems}}{{^uniqueItems}}int index{{/uniqueItems}}) {
+    if (this.{{name}} != null{{#uniqueItems}} && {{name}}Item != null{{/uniqueItems}}) {
+      this.{{name}}.delete({{#uniqueItems}}{{name}}Item{{/uniqueItems}}{{^uniqueItems}}index{{/uniqueItems}});
+    }
+
+    return this;
+  }
+  {{/isArray}}
+  {{#isMap}}
+  @JsOverlay
+  public final {{classname}} put{{nameInCamelCase}}Item(String key, {{{items.datatypeWithEnum}}} {{name}}Item) {
+    if (this.{{name}} == null) {
+      this.{{name}} = {{{defaultValue}}};
+    }
+
+    this.{{name}}.set(key, {{name}}Item);
+    return this;
+  }
+
+  @JsOverlay
+  public final {{classname}} remove{{nameInCamelCase}}Item(String key) {
+    if (key != null && this.{{name}} != null) {
+      this.{{name}}.delete(key);
+    }
+
+    return this;
+  }
+  {{/isMap}}
+  {{/vars}}
+
+/*
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }{{#hasVars}}
+    {{classname}} {{classVarName}} = ({{classname}}) o;
+    return {{#vars}}Objects.equals(this.{{name}}, {{classVarName}}.{{name}}){{^-last}} &&
+        {{/-last}}{{/vars}}{{#parent}} &&
+        super.equals(o){{/parent}};{{/hasVars}}{{^hasVars}}
+    return {{#parent}}super.equals(o){{/parent}}{{^parent}}true{{/parent}};{{/hasVars}}
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash({{#vars}}{{name}}{{^-last}}, {{/-last}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
+  }
+*/
+
+{{#generateBuilders}}{{^additionalProperties}}
+  public static {{classname}}Builder<?, ?> builder() {
+    return new {{classname}}BuilderImpl();
+  }
+
+  private static final class {{classname}}BuilderImpl extends {{classname}}Builder<{{classname}}, {{classname}}BuilderImpl> {
+
+    @Override
+    protected {{classname}}BuilderImpl self() {
+      return this;
+    }
+
+    @Override
+    public {{classname}} build() {
+      return new {{classname}}(this);
+    }
+  }
+
+  public static abstract class {{classname}}Builder<C extends {{classname}}, B extends {{classname}}Builder<C, B>> {{#parent}}extends {{{.}}}Builder<C, B>{{/parent}} {
+    {{#vars}}
+    private {{{datatypeWithEnum}}} {{name}}{{#defaultValue}} = {{{.}}}{{/defaultValue}};
+    {{/vars}}
+  {{^parent}}
+    protected abstract B self();
+
+    public abstract C build();
+    {{/parent}}
+
+    {{#vars}}
+    public B {{name}}({{{datatypeWithEnum}}} {{name}}) {
+      this.{{name}} = {{name}};
+      return self();
+    }
+    {{/vars}}
+  }{{/additionalProperties}}{{/generateBuilders}}
+}

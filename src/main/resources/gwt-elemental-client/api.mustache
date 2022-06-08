@@ -1,28 +1,58 @@
+package {{package}};
 
-# This is a sample api mustache template.  It is representing a fictitious
-# language and won't be usable or compile to anything without lots of changes.
-# Use it as an example.  You can access the variables in the generator object
-# like such:
+{{#imports}}import {{import}};
+{{/imports}}
 
-# use the package from the `apiPackage` variable
-package: {{package}}
+import java.util.function.Consumer;
 
-# operations block
+import elemental2.core.JsArray;
+import elemental2.core.JsMap;
+import elemental2.core.JsSet;
+
+import elemental2.promise.IThenable;
+import elemental2.promise.Promise;
+
+/**
+ * Path("{{commonPath}}"){{#lambda.escapeAsterisk}}{{#hasConsumes}}
+ * Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
+ * Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}{{/lambda.escapeAsterisk}}
+ */
+{{>generatedAnnotation}}
+public interface {{classname}} {
 {{#operations}}
-classname: {{classname}}
-
-# loop over each operation in the API:
 {{#operation}}
-
-# each operation has an `operationId`:
-operationId: {{operationId}}
-
-# and parameters:
-{{#allParams}}
-{{paramName}}: {{dataType}}
-{{/allParams}}
-
+{{>apiInterface}}
 {{/operation}}
-
-# end of operations block
 {{/operations}}
+
+  /**
+   * Create a {@link elemental2.promise.IThenable.ThenOnFulfilledCallbackFn} which consumes the
+   * value and returns <code>null</code>.
+   *
+   * @param consumer the value consumer
+   * @return a callback function which return null
+   * @param <T> the value type
+   * @param <V> the return type
+   */
+  static <T, V> IThenable.ThenOnFulfilledCallbackFn<T, V> consume(Consumer<T> consumer) {
+    return value -> {
+      consumer.accept(value);
+      return null;
+    };
+  }
+
+  /**
+   * Create a {@link elemental2.promise.IThenable.ThenOnFulfilledCallbackFn} which handles the
+   * rejected object and returns null.
+   *
+   * @param consumer the value consumer
+   * @return a callback function which returns null
+   * @param <V> the return type
+   */
+  static <V> IThenable.ThenOnRejectedCallbackFn<V> handle(Consumer<Object> consumer) {
+    return value -> {
+      consumer.accept(value);
+      return null;
+    };
+  }
+}

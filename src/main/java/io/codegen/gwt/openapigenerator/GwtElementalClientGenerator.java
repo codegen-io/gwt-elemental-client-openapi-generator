@@ -1,27 +1,30 @@
 package io.codegen.gwt.openapigenerator;
 
-import org.openapitools.codegen.*;
-import org.openapitools.codegen.model.*;
-import io.swagger.models.properties.*;
+import com.google.common.collect.ImmutableMap;
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.Template;
+import io.swagger.v3.oas.models.media.Schema;
+import org.apache.commons.lang3.StringUtils;
+import org.openapitools.codegen.CliOption;
+import org.openapitools.codegen.CodegenModel;
+import org.openapitools.codegen.CodegenOperation;
+import org.openapitools.codegen.CodegenParameter;
+import org.openapitools.codegen.CodegenProperty;
+import org.openapitools.codegen.CodegenResponse;
+import org.openapitools.codegen.SupportingFile;
+import org.openapitools.codegen.languages.JavaClientCodegen;
+import org.openapitools.codegen.model.ModelMap;
+import org.openapitools.codegen.model.OperationMap;
+import org.openapitools.codegen.model.OperationsMap;
+import org.openapitools.codegen.templating.mustache.CamelCaseLambda;
 
-import java.util.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
+import java.util.Map;
 
-public class GwtElementalClientGenerator extends DefaultCodegen implements CodegenConfig {
-
-  // source folder where to write the files
-  protected String sourceFolder = "src";
-  protected String apiVersion = "1.0.0";
-
-  /**
-   * Configures the type of generator.
-   *
-   * @return  the CodegenType for this generator
-   * @see     org.openapitools.codegen.CodegenType
-   */
-  public CodegenType getTag() {
-    return CodegenType.CLIENT;
-  }
+public class GwtElementalClientGenerator extends JavaClientCodegen {
 
   /**
    * Configures a friendly name for the generator.  This will be used by the generator
@@ -31,30 +34,6 @@ public class GwtElementalClientGenerator extends DefaultCodegen implements Codeg
    */
   public String getName() {
     return "gwt-elemental-client";
-  }
-
-  /**
-   * Provides an opportunity to inspect and modify operation data before the code is generated.
-   */
-  @Override
-  public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
-
-    // to try debugging your code generator:
-    // set a break point on the next line.
-    // then debug the JUnit test called LaunchGeneratorInDebugger
-
-    OperationsMap results = super.postProcessOperationsWithModels(objs, allModels);
-
-    OperationMap ops = results.getOperations();
-    List<CodegenOperation> opList = ops.getOperation();
-
-    // iterate over the operation and perhaps modify something
-    for(CodegenOperation co : opList){
-      // example:
-      // co.httpMethod = co.httpMethod.toLowerCase();
-    }
-
-    return results;
   }
 
   /**
@@ -70,27 +49,6 @@ public class GwtElementalClientGenerator extends DefaultCodegen implements Codeg
   public GwtElementalClientGenerator() {
     super();
 
-    // set the output folder here
-    outputFolder = "generated-code/gwt-elemental-client";
-
-    /**
-     * Models.  You can write model files using the modelTemplateFiles map.
-     * if you want to create one template for file, you can do so here.
-     * for multiple files for model, just put another entry in the `modelTemplateFiles` with
-     * a different extension
-     */
-    modelTemplateFiles.put(
-      "model.mustache", // the template to use
-      ".sample");       // the extension for each file to write
-
-    /**
-     * Api classes.  You can write classes for each Api file with the apiTemplateFiles map.
-     * as with models, add multiple entries with different extensions for multiple files per
-     * class
-     */
-    apiTemplateFiles.put(
-      "api.mustache",   // the template to use
-      ".sample");       // the extension for each file to write
 
     /**
      * Template Location.  This is the location which templates will be read from.  The generator
@@ -98,101 +56,238 @@ public class GwtElementalClientGenerator extends DefaultCodegen implements Codeg
      */
     templateDir = "gwt-elemental-client";
 
-    /**
-     * Api Package.  Optional, if needed, this can be used in templates
-     */
-    apiPackage = "org.openapitools.api";
+    this.removeOption("library");
+    this.supportedLibraries.put("elemental", "GWT Elemental");
+
+    CliOption library = (new CliOption("library", "library template (sub-template)")).defaultValue("<default>");
+    library.setEnum(this.supportedLibraries);
+    this.cliOptions.add(library);
+
+    this.library = "elemental";
+    this.serializationLibrary = "elemental";
+
+    this.additionalProperties.put("openbrace", "{");
+    this.additionalProperties.put("closebrace", "}");
+
+  }
+
+  public void processOpts() {
+    super.processOpts();
 
     /**
-     * Model Package.  Optional, if needed, this can be used in templates
+     * Models.  You can write model files using the modelTemplateFiles map.
+     * if you want to create one template for file, you can do so here.
+     * for multiple files for model, just put another entry in the `modelTemplateFiles` with
+     * a different extension
      */
-    modelPackage = "org.openapitools.model";
+    // the template to use and the extension for each file to write
+    modelTemplateFiles.clear();
+    modelTemplateFiles.put("model.mustache", ".java");
+
 
     /**
-     * Reserved words.  Override this with reserved words specific to your language
+     * Api classes.  You can write classes for each Api file with the apiTemplateFiles map.
+     * as with models, add multiple entries with different extensions for multiple files per
+     * class
      */
-    reservedWords = new HashSet<String> (
-      Arrays.asList(
-        "sample1",  // replace with static values
-        "sample2")
-    );
-
-    /**
-     * Additional Properties.  These values can be passed to the templates and
-     * are available in models, apis, and supporting files
-     */
-    additionalProperties.put("apiVersion", apiVersion);
+    // the template to use and the extension for each file to write
+    apiTemplateFiles.clear();
+    apiTemplateFiles.put("api.mustache", ".java");
+    apiTemplateFiles.put("apiClient.mustache", "Client.java");
 
     /**
      * Supporting Files.  You can write single files for the generator with the
      * entire object tree available.  If the input file has a suffix of `.mustache
      * it will be processed by the template engine.  Otherwise, it will be copied
      */
-    supportingFiles.add(new SupportingFile("myFile.mustache",   // the input template or file
-      "",                                                       // the destination folder, relative `outputFolder`
-      "myFile.sample")                                          // the output file
-    );
+    // the input template or file the destination folder, relative `outputFolder` the output file
+    supportingFiles.clear();
+    supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
+    supportingFiles.add(new SupportingFile("module.mustache", this.sourceFolder + "/..", "module.gwt.xml"));
+    supportingFiles.add(new SupportingFile("elementalClient.mustache", (this.sourceFolder + File.separator + this.apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "ElementalClient.java"));
+    supportingFiles.add(new SupportingFile("fetchClient.mustache", (this.sourceFolder + File.separator + this.apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "FetchClient.java"));
 
-    /**
-     * Language Specific Primitives.  These types will not trigger imports by
-     * the client generator
-     */
-    languageSpecificPrimitives = new HashSet<String>(
-      Arrays.asList(
-        "Type1",      // replace these with your types
-        "Type2")
-    );
+    this.apiDocTemplateFiles.clear();
+    this.apiTestTemplateFiles.clear();
+    this.modelDocTemplateFiles.clear();
+    this.modelTestTemplateFiles.clear();
+
+    this.typeMapping.put("array", "JsArray");
+    this.typeMapping.put("set", "JsSet");
+    this.typeMapping.put("map", "JsMap");
+
+    this.typeMapping.put("number", "JsNumber");
+    this.typeMapping.put("decimal", "JsNumber");
+
+    this.typeMapping.put("date", "String");
+    this.typeMapping.put("DateTime", "String");
+    this.typeMapping.put("UUID", "String");
+    this.typeMapping.put("file", "String");
+
+
+    this.importMapping.put("JsArray", "elemental2.core.JsArray");
+    this.importMapping.put("JsMap", "elemental2.core.JsMap");
+    this.importMapping.put("JsSet", "elemental2.core.JsSet");
+    this.importMapping.put("JsNumber", "elemental2.core.JsNumber");
+
+    this.instantiationTypes.put("array", "JsArray");
+    this.instantiationTypes.put("set", "JsSet");
+    this.instantiationTypes.put("map", "JsMap");
+
+    this.importMapping.put("Promise", "elemental2.promise.Promise");
   }
 
-  /**
-   * Escapes a reserved word as defined in the `reservedWords` array. Handle escaping
-   * those terms here.  This logic is only called if a variable matches the reserved words
-   *
-   * @return the escaped term
-   */
   @Override
-  public String escapeReservedWord(String name) {
-    return "_" + name;  // add an underscore to the name
+  protected ImmutableMap.Builder<String, Mustache.Lambda> addMustacheLambdas() {
+    return super.addMustacheLambdas()
+            .put("escapeAsterisk", new EscapeAsteriskLambda())
+            .put("camelCase", new CamelCaseLambda(false));
   }
 
-  /**
-   * Location to write model files.  You can use the modelPackage() as defined when the class is
-   * instantiated
-   */
-  public String modelFileFolder() {
-    return outputFolder + "/" + sourceFolder + "/" + modelPackage().replace('.', File.separatorChar);
-  }
-
-  /**
-   * Location to write api files.  You can use the apiPackage() as defined when the class is
-   * instantiated
-   */
   @Override
-  public String apiFileFolder() {
-    return outputFolder + "/" + sourceFolder + "/" + apiPackage().replace('.', File.separatorChar);
+  public CodegenModel fromModel(String name, Schema model) {
+    CodegenModel result = super.fromModel(name, model);
+
+    result.imports.remove("ApiModel");
+    result.imports.remove("JsonNullable");
+
+    return result;
   }
 
-  /**
-   * override with any special text escaping logic to handle unsafe
-   * characters so as to avoid code injection
-   *
-   * @param input String to be cleaned up
-   * @return string with unsafe characters removed or escaped
-   */
   @Override
-  public String escapeUnsafeCharacters(String input) {
-    //TODO: check that this logic is safe to escape unsafe characters to avoid code injection
-    return input;
+  public void postProcessModelProperty(CodegenModel model, CodegenProperty property) {
+    super.postProcessModelProperty(model, property);
+
+    model.imports.remove("ApiModelProperty");
+    model.imports.remove("ApiModel");
+    model.imports.remove("JsonSerialize");
+    model.imports.remove("ToStringSerializer");
   }
 
-  /**
-   * Escape single and/or double quote to avoid code injection
-   *
-   * @param input String to be cleaned up
-   * @return string with quotation mark removed or escaped
-   */
-  public String escapeQuotationMark(String input) {
-    //TODO: check that this logic is safe to escape quotation mark to avoid code injection
-    return input.replace("\"", "\\\"");
+  @Override
+  public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
+    super.postProcessOperationsWithModels(objs, allModels);
+
+    OperationsMap updatedObjs = postProcessOperations(objs);
+    OperationMap operations = updatedObjs.getOperations();
+    if (operations != null) {
+      List<CodegenOperation> ops = operations.getOperation();
+      for (CodegenOperation co : ops) {
+        handleImplicitHeaders(co);
+
+        co.imports.remove("ApiModel");
+      }
+    }
+    return updatedObjs;
+  }
+
+  static OperationsMap postProcessOperations(OperationsMap objs) {
+    OperationMap operations = objs.getOperations();
+    String commonPath = null;
+    if (operations != null) {
+      List<CodegenOperation> ops = operations.getOperation();
+      for (CodegenOperation operation : ops) {
+        if (operation.hasConsumes == Boolean.TRUE) {
+          Map<String, String> firstType = operation.consumes.get(0);
+          if (firstType != null) {
+            if ("multipart/form-data".equals(firstType.get("mediaType"))) {
+              operation.isMultipart = Boolean.TRUE;
+            }
+          }
+        }
+
+        boolean isMultipartPost = false;
+        List<Map<String, String>> consumes = operation.consumes;
+        if (consumes != null) {
+          for (Map<String, String> consume : consumes) {
+            String mt = consume.get("mediaType");
+            if (mt != null) {
+              if (mt.startsWith("multipart/form-data")) {
+                isMultipartPost = true;
+              }
+            }
+          }
+        }
+
+        for (CodegenParameter parameter : operation.allParams) {
+          if (isMultipartPost) {
+            parameter.vendorExtensions.put("x-multipart", "true");
+          }
+        }
+
+        List<CodegenResponse> responses = operation.responses;
+        if (responses != null) {
+          for (CodegenResponse resp : responses) {
+            if ("0".equals(resp.code)) {
+              resp.code = "200";
+            }
+
+            if (resp.baseType == null) {
+              resp.dataType = "Void";
+              resp.baseType = "Void";
+              // set vendorExtensions.x-java-is-response-void to true as baseType is set to "Void"
+              resp.vendorExtensions.put("x-java-is-response-void", true);
+            }
+
+            if ("array".equals(resp.containerType)) {
+              resp.containerType = "List";
+            } else if ("set".equals(resp.containerType)) {
+              resp.containerType = "Set";
+            } else if ("map".equals(resp.containerType)) {
+              resp.containerType = "Map";
+            }
+          }
+        }
+
+        if (operation.returnBaseType == null) {
+          operation.returnType = "Void";
+          operation.returnBaseType = "Void";
+          // set vendorExtensions.x-java-is-response-void to true as returnBaseType is set to "Void"
+          operation.vendorExtensions.put("x-java-is-response-void", true);
+        }
+
+        if ("array".equals(operation.returnContainer)) {
+          operation.returnContainer = "List";
+        } else if ("set".equals(operation.returnContainer)) {
+          operation.returnContainer = "Set";
+        } else if ("map".equals(operation.returnContainer)) {
+          operation.returnContainer = "Map";
+        }
+
+        if (commonPath == null) {
+          commonPath = operation.path;
+        } else {
+          commonPath = getCommonPath(commonPath, operation.path);
+        }
+      }
+      for (CodegenOperation co : ops) {
+        co.path = StringUtils.removeStart(co.path, commonPath);
+        co.subresourceOperation = co.path.length() > 1;
+      }
+      objs.put("commonPath", "/".equals(commonPath) ? StringUtils.EMPTY : commonPath);
+    }
+    return objs;
+  }
+
+  private static String getCommonPath(String path1, String path2) {
+    final String[] parts1 = StringUtils.split(path1, "/");
+    final String[] parts2 = StringUtils.split(path2, "/");
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
+      if (!parts1[i].equals(parts2[i])) {
+        break;
+      }
+      builder.append("/").append(parts1[i]);
+    }
+    return builder.toString();
+  }
+
+  private static class EscapeAsteriskLambda implements Mustache.Lambda {
+    private EscapeAsteriskLambda() {
+    }
+
+    public void execute(Template.Fragment fragment, Writer writer) throws IOException {
+      writer.write(fragment.execute().replace("*/", "*<code></code>/"));
+    }
   }
 }
