@@ -83,3 +83,22 @@ java -DdebugOperations -cp /path/to/openapi-generator-cli.jar:/path/to/your.jar 
 
 Will, for example, output the debug info for operations.
 You can use this info in the `api.mustache` file.
+
+
+## Releasing
+
+Create and deploy the release artifacts:
+```
+export GPG_TTY=$(tty)
+
+NEXT_VERSION=$(mvn help:evaluate -Dexpression="jgitver.next_patch_version" -q -DforceStdout)
+git tag -a -m "Release v${NEXT_VERSION}" "${NEXT_VERSION}"
+mvn clean deploy -Psonatype-oss-release
+```
+
+Open [Sonatype OSS](https://oss.sonatype.org/) and close and release the created staging repository.
+
+Push the tag to github:
+```
+git push --follow-tags origin master
+```
