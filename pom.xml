@@ -7,6 +7,7 @@
   <name>gwt-elemental-client-openapi-generator</name>
   <version>0.0.0-SNAPSHOT</version>
   <description>OpenAPI generator plugin which generates GWT compatible client implementations using GWT elemental.</description>
+  <url>http://codegen.io</url>
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
