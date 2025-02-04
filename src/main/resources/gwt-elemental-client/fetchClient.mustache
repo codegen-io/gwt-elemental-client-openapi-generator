@@ -48,8 +48,8 @@ public class FetchClient implements ElementalClient {
   }
 
   @Override
-  public String encodeURIComponent(String uri) {
-    return Global.encodeURIComponent(uri);
+  public String encodeURIComponent(Object component) {
+    return Global.encodeURIComponent(component.toString());
   }
 
   @Override
