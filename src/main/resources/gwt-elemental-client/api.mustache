@@ -19,6 +19,8 @@ import elemental2.promise.Promise;
  */
 {{>generatedAnnotation}}
 public interface {{classname}} {
+  public static final String BASE_PATH = "{{commonPath}}";
+
 {{#operations}}
 {{#operation}}
 {{>apiInterface}}
