@@ -1,5 +1,6 @@
 import java.util.Objects;
 
+import jsinterop.annotations.JsIgnore;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
@@ -108,8 +109,8 @@ public class {{classname}} {{#parent}}extends {{{.}}} {{/parent}}{{#vendorExtens
   {{/isMap}}
   {{/vars}}
 
-/*
   @Override
+  @JsIgnore
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -125,10 +126,10 @@ public class {{classname}} {{#parent}}extends {{{.}}} {{/parent}}{{#vendorExtens
   }
 
   @Override
+  @JsIgnore
   public int hashCode() {
     return Objects.hash({{#vars}}{{name}}{{^-last}}, {{/-last}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
   }
-*/
 
 {{#generateBuilders}}{{^additionalProperties}}
   public static {{classname}}Builder<?, ?> builder() {
