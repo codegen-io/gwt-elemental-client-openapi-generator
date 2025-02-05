@@ -9,9 +9,11 @@
     RequestInit init = RequestInit.create();
     init.setMethod("{{httpMethod}}");
     init.setCredentials("same-origin");
+    Headers headers = new Headers();{{#hasConsumes}}
+    headers.set("Content-Type", "{{#consumes}}{{#-first}}{{{mediaType}}}{{/-first}}{{/consumes}}");{{/hasConsumes}}
     {{#headerParams}}
     // Add headerParam
-    init.getHeaders().asJsPropertyMap().set("{{baseName}}", {{paramName}});
+    headers.set("{{baseName}}", {{paramName}});
     {{/headerParams}}
     {{#bodyParams}}
     // Set bodyParam
@@ -20,6 +22,8 @@
     {{#formParams}}
     // TODO: add formParam @FormParam(value = "{{baseName}}") {{{dataType}}} {{paramName}}
     {{/formParams}}
+
+    init.setHeaders(headers);
 
     String url = "{{#subresourceOperation}}{{{path}}}{{/subresourceOperation}}";
     {{#pathParams}}
