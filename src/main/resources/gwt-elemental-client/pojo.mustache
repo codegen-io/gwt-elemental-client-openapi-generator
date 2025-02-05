@@ -110,7 +110,7 @@ public class {{classname}} {{#parent}}extends {{{.}}} {{/parent}}{{#vendorExtens
   {{/vars}}
 
   @Override
-  @JsIgnore
+  @GwtIncompatible
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -126,7 +126,7 @@ public class {{classname}} {{#parent}}extends {{{.}}} {{/parent}}{{#vendorExtens
   }
 
   @Override
-  @JsIgnore
+  @GwtIncompatible
   public int hashCode() {
     return Objects.hash({{#vars}}{{name}}{{^-last}}, {{/-last}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
   }

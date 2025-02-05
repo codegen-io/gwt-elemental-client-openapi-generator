@@ -106,6 +106,7 @@ public class GwtElementalClientGenerator extends JavaClientCodegen {
     supportingFiles.add(new SupportingFile("module.mustache", this.sourceFolder + "/..", "module.gwt.xml"));
     supportingFiles.add(new SupportingFile("elementalClient.mustache", (this.sourceFolder + File.separator + this.apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "ElementalClient.java"));
     supportingFiles.add(new SupportingFile("fetchClient.mustache", (this.sourceFolder + File.separator + this.apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "FetchClient.java"));
+    supportingFiles.add(new SupportingFile("gwtIncompatible.mustache", (this.sourceFolder + File.separator + this.modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "GwtIncompatible.java"));
 
     this.apiDocTemplateFiles.clear();
     this.apiTestTemplateFiles.clear();
